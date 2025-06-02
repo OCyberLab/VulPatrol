@@ -49,8 +49,9 @@ The following packages need to be installed and available on your `\$PATH`:
 
 
 ## 3. Run
-# 1) (Optional) Slice a function from a large file:
- ```bash python3 scripts/slice_tool.py \
+ ```bash
+# 1) Slice functions from a large file:
+ python3 scripts/slice_tool.py \
   --input=examples/toyproj/foo.c \
   --function_name="vuln_func" \
   --output=work/slices/foo_vuln.c    ```
