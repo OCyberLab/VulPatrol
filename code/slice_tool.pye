@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+"""
+slice_tool.py – Extract a single function from a C/C++ file, ignoring comments.
+
+Usage:
+    python3 scripts/slice_tool.py \
+      --input path/to/foo.c \
+      --function_name vuln_func \
+      --output path/to/foo_vuln.c
+"""
+
+import argparse
+import os
+import re
+import sys
+
+def strip_comments(code: str) -> str:
+    # (Same implementation as in compile_tool.py)
+    cpp_comment_pattern = r"//.*?$"
+    c_comment_pattern   = r"/\*.*?\*/"
+    no_c_comments       = re.sub(c_comment_pattern, "", code, flags=re.DOTALL)
+    no_cpp_comments     = re.sub(cpp_comment_pattern, "", no_c_comments, flags=re.MULTILINE)
+    return no_cpp_comments
+
+def find_function_block(lines, func_name):
+    # (Same as before – no changes)
+    pattern = re.compile(rf'^\s*[\w\d_\*\s]+?\b{re.escape(func_name)}\s*\([^)]*\)\s*\{{\s*$')
+    start_idx = None
+    for i, line in enumerate(lines):
+        if pattern.match(line):
+            start_idx = i
+            break
+    if start_idx is None:
+        return None, None
+    brace_count = 0
+    in_function = False
+    end_idx = None
+    for j in range(start_idx, len(lines)):
+        brace_count += lines[j].count("{")
+        brace_count -= lines[j].count("}")
+        if brace_count > 0:
+            in_function = True
+        if in_function and brace_count == 0:
+            end_idx = j
+            break
+    if end_idx is None:
+        return start_idx, len(lines) - 1
+    return start_idx, end_idx
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Extract one function (by name) from a C/C++ file—comments removed."
+    )
+    parser.add_argument("--input", "-i", required=True, help="Path to original file.")
+    parser.add_argument("--function_name", "-f", required=True, help="Function name to extract.")
+    parser.add_argument("--output", "-o", required=True, help="Path to write sliced file.")
+    args = parser.parse_args()
+
+    src_path     = args.input
+    target_func  = args.function_name
+    out_path     = args.output
+
+    if not os.path.isfile(src_path):
+        print(f"✖ Error: '{src_path}' not found.", file=sys.stderr)
+        sys.exit(1)
+
+    # Read entire file, strip comments, then split into lines
+    with open(src_path, "r", encoding="utf8", errors="ignore") as f_orig:
+        full_text = f_orig.read()
+    clean_text = strip_comments(full_text)
+    lines = clean_text.splitlines(keepends=True)
+
+    # Collect all #include lines at the top (before stripping them)
+    # If you want to keep includes intact, you could do a second pass on the ORIGINAL file
+    # and capture #include lines before stripping comments. But here, we just look at clean lines:
+    includes = []
+    for line in lines:
+        if line.lstrip().startswith("#include"):
+            includes.append(line)
+        else:
+            break
+
+    start_idx, end_idx = find_function_block(lines, target_func)
+    if start_idx is None:
+        print(f"✖ Error: function '{target_func}' not found in {src_path}", file=sys.stderr)
+        sys.exit(1)
+
+    # Build the sliced result
+    sliced_lines = []
+    sliced_lines.extend(includes)
+    sliced_lines.append("\n")
+    sliced_lines.extend(lines[start_idx : end_idx + 1])
+
+    # Ensure output directory exists
+    out_dir = os.path.dirname(os.path.abspath(out_path))
+    if out_dir and not os.path.isdir(out_dir):
+        os.makedirs(out_dir, exist_ok=True)
+
+    with open(out_path, "w", encoding="utf8") as fout:
+        fout.writelines(sliced_lines)
+
+    print(f"✔ Wrote sliced function '{target_func}' (comments stripped) to {out_path}")
+
+if __name__ == "__main__":
+    main()
