@@ -50,55 +50,55 @@ The following packages need to be installed and available on your `\$PATH`:
 
 ## 3. Run
 # 1) (Optional) Slice a function from a large file:
-python3 scripts/slice_tool.py \
+ ```bash python3 scripts/slice_tool.py \
   --input=examples/toyproj/foo.c \
   --function_name="vuln_func" \
-  --output=work/slices/foo_vuln.c
+  --output=work/slices/foo_vuln.c    ```
 
 # 2) Compile to LLVM IR:
-python3 scripts/compile_tool.py \
+ ```bash python3 scripts/compile_tool.py \
   --input=work/slices/foo_vuln.c \
   --output=work/llvm_ir/foo_vuln.ll \
-  --opt-level=0
+  --opt-level=0    ```
 
 # 3) Build & run llvm2cpg (via Bazel):
-mkdir -p work/cpg_proto
+ ```bash mkdir -p work/cpg_proto
 bazel run //src/llvm2cpg:llvm2cpg_sh -- \
   --input_ll=work/llvm_ir/foo_vuln.ll \
-  --output_pb=work/cpg_proto/foo_vuln.cpg.pb
+  --output_pb=work/cpg_proto/foo_vuln.cpg.pb   ```
 
 # 4) Import CPG into Joern:
-mkdir -p work/joern_db
-joern-cli --import-cpg work/cpg_proto/foo_vuln.cpg.pb --out work/joern_db
+ ```bash mkdir -p work/joern_db
+joern-cli --import-cpg work/cpg_proto/foo_vuln.cpg.pb --out work/joern_db    ```
 
 # 5) Dump Call Graph JSONs:
-mkdir -p work/json_call_graphs
+ ```bash mkdir -p work/json_call_graphs
 joern-cli --run-script scripts/extractCallGraph.sc \
   --input=work/joern_db \
-  --output=work/json_call_graphs
+  --output=work/json_call_graphs    ```
 
 # 6) Dump CPG JSONs (nodes + edges):
-mkdir -p work/json_cpgs
+ ```bash mkdir -p work/json_cpgs
 joern-cli --run-script code/extractCPG.sc \
   --input=work/joern_db \
-  --output=work/json_cpgs
+  --output=work/json_cpgs    ```
 
 # 7) (Optional) Annotate CWE IDs:
-mkdir -p work/preprocessed_graphs_cwe
+ ```bash mkdir -p work/preprocessed_graphs_cwe
 python3 code/cwe_map.py \
   --input_graphs=work/preprocessed_graphs \
   --output_graphs=work/preprocessed_graphs_cwe \
-  --cwe_db=cwe_list.json
+  --cwe_db=cwe_list.json    ```
 
 # 8) Preprocess JSON → PyTorch graphs:
-mkdir -p work/preprocessed_graphs
+ ```bash mkdir -p work/preprocessed_graphs
 python3 code/preprocessing.py \
   --input_json_dir=work/json_cpgs \
   --inst2vec_vocab=pretrained_inst2vec_vocab.pt \
-  --output_dir=work/preprocessed_graphs
+  --output_dir=work/preprocessed_graphs    ```
 
 # 9) Train & evaluate MPNN (reports F1 on test set):
-mkdir -p work/checkpoints
+ ```bash mkdir -p work/checkpoints
 python3 code/mpnn_train.py \
   --data_dir=work/preprocessed_graphs \
   --epochs=300 \
@@ -111,4 +111,4 @@ python3 code/mpnn_train.py \
   --early_stopping_patience=10 \
   --task=classification \
   --checkpoint_dir=work/checkpoints \
-  --device=cuda
+  --device=cuda    ```
