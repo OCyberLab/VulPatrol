@@ -35,15 +35,18 @@ The following packages need to be installed and available on your `\$PATH`:
 3. **Joern** (v1.1.150 or higher)  
    - You need the `joern-cli` executable.  
    - If `joern-cli` is not on your system PATH, set an environment variable:  
-     ```bash
+
+      ```bash
      export JOERN_CLI=/absolute/path/to/joern-cli
      ```
+      
 4. **Python 3.7+** (with pip)  
    - We assume you’ll install Python dependencies (PyTorch, NumPy, NetworkX, etc.) inside a virtual environment or via Bazel’s `pip_import`.  
 5. **ProGraML’s `llvm2cpg`** (either cloned locally or vendored into Bazel)  
    - We expect a Bazel target `//src/llvm2cpg:llvm2cpg_sh` that wraps a compiled binary called `llvm2cpg_bin`.
 
 ---
+
 
 ## 3. Run
 # 1) (Optional) Slice a function from a large file:
