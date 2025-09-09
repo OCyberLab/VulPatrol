@@ -112,4 +112,19 @@ python3 code/mpnn_train.py \
   --early_stopping_patience=10 \
   --task=classification \
   --checkpoint_dir=work/checkpoints \
-  --device=cuda    ```
+  --device=cuda
+```
+
+---
+## Citation
+
+If you use this work, please cite the following publication:
+
+```bibtex
+@inproceedings{hailane2024vulpatrol,
+  title={VulPatrol: Interprocedural Vulnerability Detection and Localization through Semantic Graph Learning},
+  author={Hailane, Asmaa and Shirani, Paria and Jourdan, Guy-Vincent},
+  booktitle={Proceedings of the Fifteenth ACM Conference on Data and Application Security and Privacy},
+  pages={401--412},
+  year={2024}
+}
